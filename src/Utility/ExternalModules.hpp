@@ -4,7 +4,18 @@
 #undef GetModuleHandle
 #include "Types/Types.hpp"
 
-namespace winApi = SKSE::WinAPI;
+// SKSE::WinAPI was removed from CommonLibSSE-NG, so call the Windows API directly.
+namespace winApi
+{
+	using HMODULE = ::HMODULE;
+
+	inline HMODULE GetModuleHandle(const wchar_t* a_name) { return ::GetModuleHandleW(a_name); }
+
+	inline int MessageBox(void*, const char* a_text, const char* a_caption, unsigned a_flags)
+	{
+		return ::MessageBoxA(nullptr, a_text, a_caption, a_flags);
+	}
+}
 
 namespace flm
 {

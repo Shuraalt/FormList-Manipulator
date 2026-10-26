@@ -57,17 +57,29 @@ source_group(
 ########################################################################################################################
 ## Configure target DLL.
 ########################################################################################################################
-find_package(CommonLibSSE CONFIG REQUIRED)
+include(FetchContent)
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(SKSE_SUPPORT_XBYAK ON CACHE BOOL "" FORCE)
+set(SKSE_SUPPORT_PATCH_SAFETY OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(
+	CommonLibSSE
+	GIT_REPOSITORY https://github.com/alandtse/CommonLibSSE-NG.git
+	GIT_TAG v13.1.0
+	GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(CommonLibSSE)
+include("${commonlibsse_SOURCE_DIR}/cmake/CommonLibSSE.cmake")
+find_package(Boost CONFIG REQUIRED COMPONENTS regex)
 find_package(unordered_dense CONFIG REQUIRED)
 find_package(tsl-ordered-map CONFIG REQUIRED)
 find_path(MERGEMAPPER_INCLUDE_DIRS "MergeMapperPluginAPI.h")
 find_path(CLIB_UTIL_INCLUDE_DIRS "ClibUtil/utils.hpp")
 
 add_commonlibsse_plugin(
-	${PROJECT_NAME} 
-	${PROJECT_AUTHOR}
-	${PROJECT_AUTHOR_EMAIL}
-	${PROJECT_VERSION}
+	${PROJECT_NAME}
+	AUTHOR "${PROJECT_AUTHOR}"
+	EMAIL "${PROJECT_AUTHOR_EMAIL}"
+	VERSION ${PROJECT_VERSION}
 	SOURCES ${sources} 
 	${MERGEMAPPER_INCLUDE_DIRS}/MergeMapperPluginAPI.cpp
 	)
@@ -86,6 +98,7 @@ target_link_libraries(
 	PRIVATE
 		unordered_dense::unordered_dense
 		tsl::ordered_map
+		Boost::regex
 )
 
 target_precompile_headers(${PROJECT_NAME}
@@ -93,26 +106,3 @@ target_precompile_headers(${PROJECT_NAME}
         Src/Plugin.hpp)
 
 
-########################################################################################################################
-## Copy results.
-########################################################################################################################
-set(MOD_FOLDER "$ENV{SKSE_SKYRIM_SE_MODS}/${PROJECT_NAME} - DEV")
-set(DLL_FOLDER "${MOD_FOLDER}/SKSE/Plugins")
-
-# Create DLL_FOLDER if it does not exist:
-add_custom_command(
-	TARGET "${PROJECT_NAME}"
-	POST_BUILD
-	COMMAND "${CMAKE_COMMAND}" -E make_directory "${DLL_FOLDER}"
-	COMMENT "Creating the folder: ${DLL_FOLDER}."
-	VERBATIM
-)
-# Copy the DLL to the configured output directory
-add_custom_command(
-	TARGET "${PROJECT_NAME}"
-	POST_BUILD
-	COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${PROJECT_NAME}>" "${DLL_FOLDER}"
-    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.pdb" "${DLL_FOLDER}" DEPENDS "$<TARGET_FILE_DIR:${PROJECT_NAME}>/${PROJECT_NAME}.pdb"
-	COMMENT "Copying dll: ${PROJECT_NAME}.dll to ${DLL_FOLDER}."
-	VERBATIM
-)
