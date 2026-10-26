@@ -83,7 +83,7 @@ namespace
  * \param skse      - SKSE interface.
  * \return          - True, if everything went fine.
  */
-extern "C" [[maybe_unused]] DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* skse)
+SKSEPluginLoad(const SKSE::LoadInterface* skse)
 {
 	flm::log::InitializeLog();
 	logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
